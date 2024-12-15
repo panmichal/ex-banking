@@ -10,6 +10,8 @@ defmodule ExBanking.Application do
     children = [
       # Starts a worker by calling: ExBanking.Worker.start_link(arg)
       # {ExBanking.Worker, arg}
+      {DynamicSupervisor, name: ExBanking.UserSupervisor, strategy: :one_for_one},
+      {Registry, keys: :unique, name: ExBanking.UserRegistry}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

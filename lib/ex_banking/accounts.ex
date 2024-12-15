@@ -43,7 +43,8 @@ defmodule ExBanking.Accounts do
   iex> ExBanking.Accounts.decrease_balance(%{"usd" => 100}, "eur", 1)
   {:error, :not_enough_money}
   """
-  @spec decrease_balance(map(), String.t(), number()) :: {:ok, map()} | {:error, String.t()}
+  @spec decrease_balance(map(), String.t(), number()) ::
+          {:ok, map()} | {:error, :not_enough_money}
   def decrease_balance(account, currency, amount) do
     current_balance = get_balance(account, currency)
 
