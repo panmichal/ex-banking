@@ -125,7 +125,7 @@ defmodule ExBanking do
   defp deposit_to_receiver(to_user_agent, amount, currency) do
     case AccountAgent.increase_balance(to_user_agent, amount, currency) do
       {:ok, to_user_balance} -> {:ok, to_user_balance}
-      {:error, :too_many_requests} -> {:error, :too_many_requests_to_receiver}
+      {:error, :too_many_requests_to_user} -> {:error, :too_many_requests_to_receiver}
     end
   end
 
