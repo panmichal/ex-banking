@@ -30,12 +30,12 @@ defmodule ExBanking do
           {:ok, new_balance :: number}
           | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
   def deposit(user, amount, currency)
-      when is_binary(user) and is_number(amount) and is_binary(currency) do
+      when is_binary(user) and is_number(amount) and amount > 0 and is_binary(currency) do
     case get_user(user) do
       nil ->
         {:error, :user_does_not_exist}
 
-      user_agent ->
+      {:ok, user_agent} ->
         ExBanking.AccountAgent.increase_balance(user_agent, amount, currency)
     end
   end
@@ -52,13 +52,13 @@ defmodule ExBanking do
              | :not_enough_money
              | :too_many_requests_to_user}
   def withdraw(user, amount, currency)
-      when is_binary(user) and is_number(amount) and is_binary(currency) do
+      when is_binary(user) and is_number(amount) and amount > 0 and is_binary(currency) do
     case get_user(user) do
       nil ->
         {:error, :user_does_not_exist}
 
-      user_agent ->
-        ExBanking.AccountAgent.decrease_balance(user_agent, currency, amount)
+      {:ok, user_agent} ->
+        ExBanking.AccountAgent.decrease_balance(user_agent, amount, currency)
     end
   end
 
@@ -70,7 +70,7 @@ defmodule ExBanking do
       nil ->
         {:error, :user_does_not_exist}
 
-      user_agent ->
+      {:ok, user_agent} ->
         ExBanking.AccountAgent.get_balance(user_agent, currency)
     end
   end
@@ -89,13 +89,31 @@ defmodule ExBanking do
              | :receiver_does_not_exist
              | :too_many_requests_to_sender
              | :too_many_requests_to_receiver}
-  def send(from_user, to_user, amount, currency) do
-    {:ok, amount, amount}
+  def send(from_user, to_user, amount, currency)
+      when is_binary(from_user) and is_binary(to_user) and is_binary(currency) and
+             is_number(amount) and amount > 0 do
+    with {:ok, from_user_agent} <- get_sender(from_user),
+         {:ok, to_user_agent} <- get_receiver(to_user) do
+    end
+  end
+
+  defp get_sender(from_user) do
+    case get_user(from_user) do
+      nil -> {:error, :sender_does_not_exist}
+      {:ok, user_agent} -> {:ok, user_agent}
+    end
+  end
+
+  defp get_receiver(to_user) do
+    case get_user(to_user) do
+      nil -> {:error, :receiver_does_not_exist}
+      {:ok, user_agent} -> {:ok, user_agent}
+    end
   end
 
   defp get_user(user) do
     case Registry.lookup(ExBanking.UserRegistry, user) do
-      [{pid, _}] -> pid
+      [{pid, _}] -> {:ok, pid}
       _ -> nil
     end
   end

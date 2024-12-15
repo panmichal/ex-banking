@@ -16,7 +16,7 @@ defmodule ExBanking.Accounts do
 
   """
   @spec get_balance(map(), String.t()) :: number()
-  def get_balance(account, currency), do: Map.get(account, currency, 0)
+  def get_balance(balance, currency), do: Map.get(balance, currency, 0)
 
   @doc """
    Increases balance for the given currency. Sets 0 as initial balance if currency does not exist.
@@ -28,8 +28,8 @@ defmodule ExBanking.Accounts do
    %{"eur" => 200, "usd" => 100}
   """
   @spec increase_balance(map(), String.t(), number()) :: map()
-  def increase_balance(account, currency, amount),
-    do: Map.update(account, currency, amount, &(&1 + amount))
+  def increase_balance(balance, currency, amount),
+    do: Map.update(balance, currency, amount, &(&1 + amount))
 
   @doc """
   Decreases balance for the given currency. Returns an error if current balance is lower than the amount.
@@ -45,11 +45,11 @@ defmodule ExBanking.Accounts do
   """
   @spec decrease_balance(map(), String.t(), number()) ::
           {:ok, map()} | {:error, :not_enough_money}
-  def decrease_balance(account, currency, amount) do
-    current_balance = get_balance(account, currency)
+  def decrease_balance(balance, currency, amount) do
+    current_balance = get_balance(balance, currency)
 
     if current_balance < amount,
       do: {:error, :not_enough_money},
-      else: {:ok, Map.update(account, currency, 0, &(&1 - amount))}
+      else: {:ok, Map.update(balance, currency, 0, &(&1 - amount))}
   end
 end
