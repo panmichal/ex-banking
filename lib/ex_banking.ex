@@ -3,6 +3,8 @@ defmodule ExBanking do
   Documentation for `ExBanking`.
   """
 
+  alias ExBanking.AccountAgent
+
   @spec create_user(user :: String.t()) :: :ok | {:error, :wrong_arguments | :user_already_exists}
   def create_user(user) when is_binary(user) do
     case get_user(user) do
@@ -36,7 +38,7 @@ defmodule ExBanking do
         {:error, :user_does_not_exist}
 
       {:ok, user_agent} ->
-        ExBanking.AccountAgent.increase_balance(user_agent, amount, currency)
+        AccountAgent.increase_balance(user_agent, amount, currency)
     end
   end
 
@@ -58,8 +60,12 @@ defmodule ExBanking do
         {:error, :user_does_not_exist}
 
       {:ok, user_agent} ->
-        ExBanking.AccountAgent.decrease_balance(user_agent, amount, currency)
+        AccountAgent.decrease_balance(user_agent, amount, currency)
     end
+  end
+
+  def withdraw(_user, _amount, _currency) do
+    {:error, :wrong_arguments}
   end
 
   @spec get_balance(user :: String.t(), currency :: String.t()) ::
@@ -71,8 +77,12 @@ defmodule ExBanking do
         {:error, :user_does_not_exist}
 
       {:ok, user_agent} ->
-        ExBanking.AccountAgent.get_balance(user_agent, currency)
+        AccountAgent.get_balance(user_agent, currency)
     end
+  end
+
+  def get_balance(_user, _currency) do
+    {:error, :wrong_arguments}
   end
 
   @spec send(
@@ -91,9 +101,31 @@ defmodule ExBanking do
              | :too_many_requests_to_receiver}
   def send(from_user, to_user, amount, currency)
       when is_binary(from_user) and is_binary(to_user) and is_binary(currency) and
-             is_number(amount) and amount > 0 do
+             is_number(amount) and amount > 0 and from_user != to_user do
     with {:ok, from_user_agent} <- get_sender(from_user),
-         {:ok, to_user_agent} <- get_receiver(to_user) do
+         {:ok, to_user_agent} <- get_receiver(to_user),
+         {:ok, from_user_balance} <- withdraw_from_sender(from_user_agent, amount, currency),
+         {:ok, to_user_balance} <- deposit_to_receiver(to_user_agent, amount, currency) do
+      {:ok, from_user_balance, to_user_balance}
+    end
+  end
+
+  def send(_from_user, _to_user, _amount, _currency) do
+    {:error, :wrong_arguments}
+  end
+
+  defp withdraw_from_sender(from_user_agent, amount, currency) do
+    case AccountAgent.decrease_balance(from_user_agent, amount, currency) do
+      {:ok, from_user_balance} -> {:ok, from_user_balance}
+      {:error, :not_enough_money} -> {:error, :not_enough_money}
+      {:error, :too_many_requests_to_user} -> {:error, :too_many_requests_to_sender}
+    end
+  end
+
+  defp deposit_to_receiver(to_user_agent, amount, currency) do
+    case AccountAgent.increase_balance(to_user_agent, amount, currency) do
+      {:ok, to_user_balance} -> {:ok, to_user_balance}
+      {:error, :too_many_requests} -> {:error, :too_many_requests_to_receiver}
     end
   end
 
