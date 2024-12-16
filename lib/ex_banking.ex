@@ -5,15 +5,20 @@ defmodule ExBanking do
 
   alias ExBanking.AccountAgent
 
+  @default_config [
+    user_supervisor: ExBanking.UserSupervisor,
+    user_registry: ExBanking.UserRegistry
+  ]
+
   @spec create_user(user :: String.t()) :: :ok | {:error, :wrong_arguments | :user_already_exists}
   def create_user(user) when is_binary(user) do
     case get_user(user) do
       nil ->
-        name = {:via, Registry, {ExBanking.UserRegistry, user}}
+        name = {:via, Registry, {Keyword.get(config(), :user_registry), user}}
 
         {:ok, _account_agent} =
           DynamicSupervisor.start_child(
-            ExBanking.UserSupervisor,
+            Keyword.get(config(), :user_supervisor),
             {ExBanking.AccountAgent, name: name}
           )
 
@@ -144,9 +149,13 @@ defmodule ExBanking do
   end
 
   defp get_user(user) do
-    case Registry.lookup(ExBanking.UserRegistry, user) do
+    case Registry.lookup(Keyword.get(config(), :user_registry), user) do
       [{pid, _}] -> {:ok, pid}
       _ -> nil
     end
+  end
+
+  defp config() do
+    Keyword.merge(@default_config, Application.get_env(:ex_banking, ExBanking, []))
   end
 end
