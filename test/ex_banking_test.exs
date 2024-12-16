@@ -115,6 +115,21 @@ defmodule ExBankingTest do
       assert ExBanking.send("sender", "receiver", 100.50, "pln") == {:error, :not_enough_money}
     end
 
+    test "returns error when sender does not exist" do
+      :ok = ExBanking.create_user("receiver")
+
+      assert ExBanking.send("sender", "receiver", 100.50, "pln") ==
+               {:error, :sender_does_not_exist}
+    end
+
+    test "returns error when receiver does not exist" do
+      :ok = ExBanking.create_user("sender")
+      {:ok, 100.25} = ExBanking.deposit("sender", 100.25, "eur")
+
+      assert ExBanking.send("sender", "receiver", 100.50, "pln") ==
+               {:error, :receiver_does_not_exist}
+    end
+
     test "transfer the given amount between the sender and the receiver" do
       :ok = ExBanking.create_user("sender")
       :ok = ExBanking.create_user("receiver")
