@@ -137,6 +137,9 @@ defmodule ExBankingTest do
       {:ok, 55.55} = ExBanking.deposit("sender", 55.55, "pln")
 
       assert ExBanking.send("sender", "receiver", 50.25, "pln") == {:ok, 5.30, 50.25}
+      assert ExBanking.get_balance("sender", "pln") == {:ok, 5.30}
+      assert ExBanking.get_balance("sender", "eur") == {:ok, 100.50}
+      assert ExBanking.get_balance("receiver", "pln") == {:ok, 50.25}
     end
   end
 end
