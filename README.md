@@ -1,21 +1,21 @@
 # ExBanking
 
-**TODO: Add description**
+## Running
 
-## Installation
+1. Install dependencies:
+   ```mix deps.get```
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `ex_banking` to your list of dependencies in `mix.exs`:
+2. Run the mix project (and connect IEx session): ```iex -S mix```
 
-```elixir
-def deps do
-  [
-    {:ex_banking, "~> 0.1.0"}
-  ]
-end
+### Example usage
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/ex_banking>.
+iex(1)> ExBanking.create_user("testuser")
+:ok
+iex(2)> ExBanking.deposit("testuser", 150.50, "eur")
+{:ok, 150.5}
+iex(3)> ExBanking.withdraw("testuser", 140.50, "pln")
+{:error, :not_enough_money}
+iex(4)> ExBanking.withdraw("testuser", 150.50, "eur")
+{:ok, 0.0}
+```
 
